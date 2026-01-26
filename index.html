@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>円周率表示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        #pi-display {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecf1 100%);
+            padding: 25px;
+            border-radius: 12px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #2c3e50;
+            min-height: 120px;
+            border-left: 4px solid #667eea;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        #button {
+            display: block;
+            margin: 30px auto;
+            padding: 14px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        #button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        #button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+        }
+        
+        #button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        #button:disabled:hover {
+            transform: none;
+        }
+        
+        .digit-count {
+            text-align: center;
+            color: #667eea;
+            margin-top: 15px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .digit-count span {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>円周率の展開</h1>
+        <div id="pi-display">3.14159265358979323846264338327950288419716939937510</div>
+        <button id="button">さらに10桁追加</button>
+        <div class="digit-count">表示桁数: <span id="digit-count">100</span>桁</div>
+    </div>
+
+    <script>
+        // 円周率を1000桁まで用意
+        const piDigits = "14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196442881097566593344612847564823378678316527120190914564856692346034861045432664821339360726024914127372458700660631558817488152092096282925409171536436789259036001133053054882046652138414695194151160943305727036575959195309218611738193261179310511854807446237996274956735188575272489122793818301194912983367336244065664308602139494639522473719070217986094370277053921717629317675238467481846766940513200056812714526356082778577134275778960917363717872146844090122495343014654958537105079227968925892354201995611212902196086403441815981362977477130996051870721134999999837297804995105973173281609631859502445945534690830264252230825334468503526193118817101100313388246468157082630100594858704003186480342194897278290641045072636881313739855256117322040245091227700226941127573627280495738108967504018369868368450725799364729060762996941380475654823728997180326802474420629269124859052181004459842150591120249441341728531478105803860326071847991810260601)";
+
+        let currentDigits = 100;
+        const piDisplay = document.getElementById('pi-display');
+        const button = document.getElementById('button');
+        const digitCount = document.getElementById('digit-count');
+
+        // 初期表示（円周率を100桁表示）
+        function updateDisplay() {
+            const displayText = '3.' + piDigits.substring(0, currentDigits);
+            piDisplay.textContent = displayText;
+            digitCount.textContent = currentDigits;
+        }
+
+        // ボタンクリックイベント
+        button.addEventListener('click', function() {
+            currentDigits += 10;
+            if (currentDigits > piDigits.length) {
+                currentDigits = piDigits.length;
+                button.disabled = true;
+                button.textContent = 'これ以上追加できません';
+            }
+            updateDisplay();
+        });
+
+        // 初期表示
+        updateDisplay();
+    </script>
+</body>
+</html>
