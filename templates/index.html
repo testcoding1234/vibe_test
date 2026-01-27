@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV統計ツール</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .upload-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px dashed #667eea;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: 500;
+        }
+
+        .file-input-label:hover {
+            background: #764ba2;
+        }
+
+        .file-name {
+            color: #666;
+            flex: 1;
+            padding-left: 10px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 10px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #764ba2;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .result-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-section h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .basic-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .info-card {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f0f0f0;
+        }
+
+        .column-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .column-tag {
+            background: #e9ecef;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .column-tag.numeric {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 CSV統計ツール</h1>
+        <p class="subtitle">CSVファイルを選択して分析</p>
+
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+
+        <div class="upload-section">
+            <div class="file-input-wrapper">
+                <label for="fileInput" class="file-input-label">ファイルを選択</label>
+                <input type="file" id="fileInput" accept=".csv">
+            </div>
+            <span class="file-name" id="fileName">ファイルが選択されていません</span>
+            <button id="analyzeBtn" onclick="analyzeCSV()" disabled>分析</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>ファイルを分析中...</p>
+        </div>
+
+        <div class="results" id="results">
+            <!-- 基本情報 -->
+            <div class="result-section">
+                <h2>📈 基本情報</h2>
+                <div class="basic-info">
+                    <div class="info-card">
+                        <div class="info-label">行数</div>
+                        <div class="info-value" id="rowCount">-</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">列数</div>
+                        <div class="info-value" id="colCount">-</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">欠損値数</div>
+                        <div class="info-value" id="missingCount">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 列情報 -->
+            <div class="result-section">
+                <h2>📋 列情報</h2>
+                <div id="columnsInfo"></div>
+            </div>
+
+            <!-- 欠損値情報 -->
+            <div class="result-section" id="missingSection" style="display:none;">
+                <h2>⚠️ 欠損値情報</h2>
+                <div class="table-wrapper">
+                    <table id="missingTable">
+                        <thead>
+                            <tr>
+                                <th>列名</th>
+                                <th>欠損値数</th>
+                                <th>割合</th>
+                            </tr>
+                        </thead>
+                        <tbody id="missingTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 統計量 -->
+            <div class="result-section" id="statsSection" style="display:none;">
+                <h2>📊 数値列の統計量</h2>
+                <div class="table-wrapper">
+                    <table id="statsTable">
+                        <thead>
+                            <tr>
+                                <th>列名</th>
+                                <th>count</th>
+                                <th>mean</th>
+                                <th>std</th>
+                                <th>min</th>
+                                <th>25%</th>
+                                <th>50%</th>
+                                <th>75%</th>
+                                <th>max</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                fileName.textContent = this.files[0].name;
+                analyzeBtn.disabled = false;
+            } else {
+                fileName.textContent = 'ファイルが選択されていません';
+                analyzeBtn.disabled = true;
+            }
+        });
+
+        async function analyzeCSV() {
+            const file = fileInput.files[0];
+            if (!file) {
+                showError('ファイルを選択してください');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            showLoading(true);
+            hideError();
+            hideSuccess();
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    showError(data.error || 'エラーが発生しました');
+                    showLoading(false);
+                    return;
+                }
+
+                displayResults(data);
+                showSuccess('分析が完了しました！');
+                showLoading(false);
+
+            } catch (error) {
+                showError('ファイルのアップロードに失敗しました: ' + error.message);
+                showLoading(false);
+            }
+        }
+
+        function displayResults(data) {
+            // 基本情報
+            document.getElementById('rowCount').textContent = data.basic_info.rows.toLocaleString();
+            document.getElementById('colCount').textContent = data.basic_info.columns;
+            document.getElementById('missingCount').textContent = data.missing_info.total_missing;
+
+            // 列情報
+            const columnsInfo = document.getElementById('columnsInfo');
+            columnsInfo.innerHTML = '';
+            const columnList = document.createElement('div');
+            columnList.className = 'column-list';
+
+            data.columns.forEach(col => {
+                const tag = document.createElement('div');
+                tag.className = 'column-tag';
+                if (data.dtypes[col].includes('int') || data.dtypes[col].includes('float')) {
+                    tag.classList.add('numeric');
+                }
+                tag.textContent = `${col} (${data.dtypes[col]})`;
+                columnList.appendChild(tag);
+            });
+            columnsInfo.appendChild(columnList);
+
+            // 欠損値情報
+            const missingByCol = data.missing_info.by_column;
+            const hasMissing = data.missing_info.total_missing > 0;
+            const missingSection = document.getElementById('missingSection');
+
+            if (hasMissing) {
+                missingSection.style.display = 'block';
+                const tbody = document.getElementById('missingTableBody');
+                tbody.innerHTML = '';
+
+                Object.entries(missingByCol).forEach(([col, count]) => {
+                    if (count > 0) {
+                        const row = document.createElement('tr');
+                        const percentage = ((count / data.basic_info.rows) * 100).toFixed(2);
+                        row.innerHTML = `
+                            <td>${col}</td>
+                            <td>${count}</td>
+                            <td>${percentage}%</td>
+                        `;
+                        tbody.appendChild(row);
+                    }
+                });
+            } else {
+                missingSection.style.display = 'none';
+            }
+
+            // 統計量
+            const stats = data.statistics;
+            const hasStats = Object.keys(stats).length > 0;
+            const statsSection = document.getElementById('statsSection');
+
+            if (hasStats) {
+                statsSection.style.display = 'block';
+                const tbody = document.getElementById('statsTableBody');
+                tbody.innerHTML = '';
+
+                Object.entries(stats).forEach(([col, stats_data]) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${col}</strong></td>
+                        <td>${formatNumber(stats_data.count)}</td>
+                        <td>${formatNumber(stats_data.mean)}</td>
+                        <td>${formatNumber(stats_data.std)}</td>
+                        <td>${formatNumber(stats_data.min)}</td>
+                        <td>${formatNumber(stats_data['25%'])}</td>
+                        <td>${formatNumber(stats_data['50%'])}</td>
+                        <td>${formatNumber(stats_data['75%'])}</td>
+                        <td>${formatNumber(stats_data.max)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } else {
+                statsSection.style.display = 'none';
+            }
+
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function formatNumber(num) {
+            if (num === null || num === undefined) return '-';
+            if (Number.isInteger(num)) return num.toLocaleString();
+            return num.toFixed(2);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function hideSuccess() {
+            document.getElementById('success').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
